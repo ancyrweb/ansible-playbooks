@@ -1,0 +1,22 @@
+---
+- name: Install UFW
+  apt:
+    name: ufw
+
+- name: Open SSH
+  ufw:
+    rule: allow
+    name: OpenSSH
+
+- name: Open HTTP ports
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+  with_items:
+      - 80 # HTTP
+      - 443 # HTTPS
+      - 25 # Mailing
+      - 465
+      - 587
+
+...

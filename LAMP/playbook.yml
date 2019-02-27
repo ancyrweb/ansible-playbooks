@@ -1,0 +1,17 @@
+---
+- name: WebServer install
+  hosts: web
+  become: yes
+  vars_files:
+    - vars.yml
+
+  roles:
+    - utils
+    - ufw
+    - nodejs
+    - php
+    - apache
+    - mariadb
+
+  tasks:
+...

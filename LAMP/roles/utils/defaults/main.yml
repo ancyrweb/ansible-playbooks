@@ -1,0 +1,6 @@
+utilitaries:
+  - git
+  - curl
+  - apt-transport-https
+  - lsb-release
+  - ca-certificates

@@ -1,0 +1,40 @@
+---
+- name: Download NodeJS Setup
+  get_url:
+    url: https://deb.nodesource.com/setup_10.x
+    dest: /tmp/node-setup.sh
+
+- file:
+    path: /tmp/node-setup.sh
+    mode: 0777
+
+- name: Executes NodeJS Setup
+  shell: /tmp/node-setup.sh
+  args:
+    executable: /bin/bash
+
+- name: Install NodeJS
+  apt:
+    name: nodejs
+
+- name: Add Yarn apt key
+  apt_key:
+    url: https://dl.yarnpkg.com/debian/pubkey.gpg
+    state: present
+
+- name: Add Yarn repository
+  apt_repository:
+    repo: "deb https://dl.yarnpkg.com/debian/ stable main"
+    state: present
+  register: yarn_repo
+
+- name: Update apt cache after repo is added
+  apt: update_cache=true
+  when: yarn_repo.changed
+
+- name: Install Yarn
+  apt:
+    name: yarn
+  when: yarn_repo.changed
+
+...

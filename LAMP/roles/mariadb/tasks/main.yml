@@ -1,0 +1,90 @@
+---
+- name: Check if root password is set
+  shell: >
+    mysqladmin -u root status
+  changed_when: false
+  failed_when: false
+  register: root_pwd_check
+  tags: mariadb
+
+- name: Preconfigure MariaDB Password
+  debconf:
+    name: mariadb-server-10.1
+    question: mysql-server/root_password
+    value: "{{ mysql_root_password }}"
+    vtype: password
+  when: root_pwd_check.rc == 0
+
+- name: Preconfigure MariaDB Password Again
+  debconf:
+    name: mariadb-server-10.1
+    question: mysql-server/root_password_again
+    value: "{{ mysql_root_password }}"
+    vtype: password
+  when: root_pwd_check.rc == 0
+
+- name: Install MariaDB
+  apt:
+    pkg: mariadb-server
+
+- name: Install Python MySQL support
+  apt:
+    pkg: "python-mysqldb"
+    state: "present"
+
+- name: Remove anonymous MySQL server user for FQDN
+  mysql_user:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    user: ""
+    host: "{{ ansible_fqdn }}"
+    state: "absent"
+
+- name: Remove anonymous MySQL server user for localhost
+  mysql_user:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    user: ""
+    state: "absent"
+
+- name: Remove test database
+  mysql_db:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    db: test
+    state: "absent"
+
+- name: Secure MySQL Root user for IPV6 Localhost
+  mysql_user:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    user: "root"
+    password: "{{ mysql_root_password }}"
+    host_all: yes
+    host:
+      - "127.0.0.1"
+      - "localhost"
+      - "{{ ansible_fqdn }}"
+      - "::1"
+
+- name: Create MySQL User
+  mysql_user:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    user: "{{ mysql_user }}"
+    password: "{{ mysql_password }}"
+    host: "localhost"
+    priv: "*.*:ALL,GRANT"
+
+- name: Install phpMyAdmin
+  apt:
+    pkg: phpmyadmin
+    state: present
+
+- name: Expose phpMyAdmin to localhost/phpmyadmin
+  file:
+    src: /usr/share/phpmyadmin
+    dest: /var/www/html/phpmyadmin
+    state: link
+
+...

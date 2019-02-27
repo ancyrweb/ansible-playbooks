@@ -1,0 +1,47 @@
+---
+- name: Add Ondrej Sury's apt key
+  apt_key:
+    url: https://packages.sury.org/php/apt.gpg
+    state: present
+
+- name: Add Ondrej Sury's repository
+  apt_repository:
+    repo: "deb https://packages.sury.org/php/ {{ ansible_distribution_release }} main"
+    state: present
+  register: php_ondrej_debian_repo
+
+- name: Update apt cache after repo is added
+  apt: update_cache=true
+  when: php_ondrej_debian_repo.changed
+
+- name: Install PHP 7.3
+  apt:
+    name: "{{ php_packages }}"
+    state: latest
+
+- lineinfile:
+    dest: /etc/php/7.3/fpm/php.ini
+    regexp: 'post_max_size[\s]?='
+    line: "post_max_size = {{ php_post_max_size }}"
+
+- lineinfile:
+    dest: /etc/php/7.3/fpm/php.ini
+    regexp: 'memory_limit[\s]?='
+    line: "memory_limit = {{ php_memory_limit }}"
+
+- lineinfile:
+    dest: /etc/php/7.3/fpm/php.ini
+    regexp: 'date.timezone[\s]?='
+    line: "date.timezone = {{ php_timezone }}"
+
+- lineinfile:
+    dest: /etc/php/7.3/fpm/php.ini
+    regexp: 'upload_max_filesize[\s]?='
+    line: "upload_max_filesize = {{ php_upload_max_filesize }}"
+
+- name: php restart
+  service:
+    name: php7.3-fpm
+    state: restarted
+
+...

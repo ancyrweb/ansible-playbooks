@@ -1,0 +1,7 @@
+---
+- name: Install Utilitaries
+  apt:
+    name: "{{ utilitaries }}"
+    state: present
+    update_cache: yes
+...
